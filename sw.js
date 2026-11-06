@@ -1,5 +1,5 @@
 /* Offline cache for the Torus PWA. Bump VERSION when files change. */
-const VERSION = 'torus-v1';
+const VERSION = 'torus-v2';
 const ASSETS = [
   './', './index.html', './style.css', './torus.js', './app.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png',

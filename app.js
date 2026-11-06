@@ -10,7 +10,7 @@
   const DEFAULTS = {
     name: 'ANON', topology: 'toral', wimpy: false, all_moves: false, moveable_heaps: true,
     show_highscore: true, theme: 'sun', speed: 'normal', sound: true, vibrate: true,
-    boardTouch: true,
+    boardTouch: true, bold: true, autoFullscreen: true,
   };
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
@@ -44,7 +44,7 @@
   }
 
   function fontSpec(px) {
-    return `${px}px ${getComputedStyle(document.body).fontFamily}`;
+    return `${settings.bold ? 'bold ' : ''}${px}px ${getComputedStyle(document.body).fontFamily}`;
   }
 
   function resize() {
@@ -52,7 +52,9 @@
     const portrait = window.matchMedia('(orientation: portrait)').matches;
     const W = r.width - 12;
     const H = portrait ? window.innerHeight * 0.62 : r.height - 12;
-    const ASPECT = 1.9;                       /* cell height / width */
+    /* cell height / width: 1.9 looks like a real terminal; squash a little (down
+       to 1.55) on short screens so the text can be wider and easier to read */
+    const ASPECT = Math.min(1.9, Math.max(1.55, (H / LINES) / (W / COLS)));
     cellW = Math.max(3, Math.min(W / COLS, H / (LINES * ASPECT)));
     cellH = cellW * ASPECT;
     dpr = window.devicePixelRatio || 1;
@@ -62,7 +64,7 @@
     canvas.height = Math.round(cellH * LINES * dpr);
     ctx.font = fontSpec(100);
     const w100 = ctx.measureText('M').width || 60;
-    fontPx = Math.min(cellH * 0.86, (100 * cellW * 0.98) / w100);
+    fontPx = Math.min(cellH * 0.9, (100 * cellW * 1.0) / w100);
     dirty = true;
   }
 
@@ -135,6 +137,29 @@
     }
   }
 
+  /* ---------------- full screen (hides the browser's address bar) ---------------- */
+  const standalone = () => window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
+  const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const canFull = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  function enterFullscreen() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req && !isFull()) {
+      try { const p = req.call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    }
+  }
+  function exitFullscreen() {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (ex && isFull()) { try { const p = ex.call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+  }
+  /* on a touch device in a browser tab, go full screen on the first tap */
+  function maybeAutoFullscreen() {
+    if (settings.autoFullscreen && !standalone() && canFull() && !isFull() &&
+        window.matchMedia('(pointer: coarse)').matches) enterFullscreen();
+  }
+  document.addEventListener('fullscreenchange', relayoutSoon);
+  function relayoutSoon() { setTimeout(resize, 80); setTimeout(resize, 350); }
+
   /* ---------------- input ---------------- */
   const modal = document.getElementById('modal');
   const modalOpen = () => !modal.hidden;
@@ -142,6 +167,7 @@
 
   function send(k) {
     if (modalOpen()) return;
+    maybeAutoFullscreen();
     if (actx && actx.state === 'suspended') actx.resume();
     if (k === '^W') k = ctrlOf('w');
     E.pushKey(k);
@@ -251,6 +277,7 @@
         <button data-a="scores">High scores</button>
         <button data-a="settings">Options</button>
         <button data-a="help">How to play</button>
+        ${canFull() && !standalone() ? `<button data-a="full">${isFull() ? 'Leave full screen' : 'Full screen (hide address bar)'}</button>` : ''}
         ${installEvt ? '<button data-a="install">Install as app</button>' : ''}
       </div>`);
     body.querySelectorAll('button[data-a]').forEach((b) => b.addEventListener('click', () => {
@@ -260,6 +287,7 @@
       else if (a === 'scores') openScores(TOPO[settings.topology].hsew && TOPO[settings.topology].vsew, false);
       else if (a === 'settings') openSettings();
       else if (a === 'help') openHelp();
+      else if (a === 'full') { closeModal(); if (isFull()) { exitFullscreen(); settings.autoFullscreen = false; } else { enterFullscreen(); settings.autoFullscreen = true; } saveSettings(); }
       else if (a === 'install') { installEvt.prompt(); installEvt = null; closeModal(); }
     }));
   }
@@ -309,6 +337,8 @@
             green: 'Green phosphor', amber: 'Amber phosphor' }, settings.theme)}</select></label>
         <label class="col">Speed of runs and last stands
           <select data-s="speed">${opt({ slow: 'Slow', normal: 'Normal', fast: 'Fast' }, settings.speed)}</select></label>
+        ${chk('bold', 'Bold terminal text (easier to read)')}
+        ${chk('autoFullscreen', 'Go full screen automatically when playing in a browser tab')}
         ${chk('boardTouch', 'Tap / swipe on the board to move')}
         ${chk('sound', 'Beep on illegal moves')}
         ${chk('vibrate', 'Vibrate')}
@@ -319,6 +349,7 @@
       settings[k] = el.type === 'checkbox' ? el.checked : el.value.trim() || DEFAULTS[k];
       saveSettings();
       if (k === 'theme') applyTheme();
+      if (k === 'bold') resize();
       if (k === 'all_moves') E.setAllMoves(settings.all_moves);
     }));
     body.querySelector('[data-a=back]').onclick = () => openMenu();
