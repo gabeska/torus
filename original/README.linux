@@ -1,0 +1,14 @@
+This is my Linux port of torus, which is robots with a twist--the
+playing field 'wraps around', allowing the 'bots to chase you like
+there aren't any boundaries.  If you wanna compile it yourself,
+make sure your curses lib and libc are properly patched (this is
+for gcc 1.40).  Let me know if you have problems; it works fine
+for me.  Oh yeah, don't forget to create the high score files using
+touch.  The binary in this archive looks for its high score files in 
+/usr/games/lib under these names:  torus_hof, torus_tmp, robots2_hof
+and robots2_tmp.
+
+Tom Wilson
+
+cwilson@seq.uncwil.edu
+

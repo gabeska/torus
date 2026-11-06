@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Torus: the classic UNIX robots game on a toroidal board, playable by touch.">
+<title>Torus</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="term-wrap"><canvas id="term" aria-label="Game board"></canvas></div>
+  <div id="controls">
+    <div id="keypad">
+      <button data-k="y" class="dir"><span class="g">&#8598;</span><span class="l">y</span></button>
+      <button data-k="k" class="dir"><span class="g">&#8593;</span><span class="l">k</span></button>
+      <button data-k="u" class="dir"><span class="g">&#8599;</span><span class="l">u</span></button>
+      <button data-k="h" class="dir"><span class="g">&#8592;</span><span class="l">h</span></button>
+      <button data-k="." class="dir"><span class="g">&middot;</span><span class="l">. wait</span></button>
+      <button data-k="l" class="dir"><span class="g">&#8594;</span><span class="l">l</span></button>
+      <button data-k="b" class="dir"><span class="g">&#8601;</span><span class="l">b</span></button>
+      <button data-k="j" class="dir"><span class="g">&#8595;</span><span class="l">j</span></button>
+      <button data-k="n" class="dir"><span class="g">&#8600;</span><span class="l">n</span></button>
+    </div>
+    <div id="actions">
+      <button data-k="t"><b>t</b> teleport</button>
+      <button data-k="r"><b>r</b> random</button>
+      <button data-k="a"><b>a</b> antimatter</button>
+      <button data-k="^W"><b>^W</b> wait</button>
+      <button data-k="s" data-confirm="1"><b>s</b> last stand</button>
+      <button data-k="d"><b>d</b> dots</button>
+      <button data-k="?"><b>?</b> hint</button>
+      <button id="menu-btn"><b>&#9776;</b> menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal" hidden>
+  <div id="panel" role="dialog" aria-modal="true">
+    <div id="panel-body"></div>
+  </div>
+</div>
+
+<script src="torus.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
